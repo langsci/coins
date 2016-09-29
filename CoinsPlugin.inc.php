@@ -70,22 +70,24 @@ class CoinsPlugin extends GenericPlugin {
 				
 				// get variables
 				$request = $this->getRequest();
+
+				// monograph metadata
 				$publishedMonograph = $templateMgr->get_template_vars('publishedMonograph');
 				$authors = $publishedMonograph->getAuthors();
 				$firstAuthor = $authors[0];
 				$datePublished = $publishedMonograph->getDatePublished();
 				$language = $publishedMonograph->getLocale();
 				
-				// TODO: get publisher and place from somewhere
-				$publisher = "Language Science Press"; 
-				$place = "Berlin";
+				// press metadata
+				$currentPress = $templateMgr->get_template_vars('currentPress');
+				$publisher = $currentPress->getLocalizedName();
+				$place = $currentPress->getSetting('location');
 				
-				// get series title
+				// series metadata
 				$seriesId = $publishedMonograph ->getSeriesId();
 				$seriesDAO = new SeriesDAO;
 				$series = $seriesDAO -> getById($seriesId,1);
 				$seriesTitle = $series->getLocalizedFullTitle();
-				
 				$seriesPosition = $publishedMonograph ->getSeriesPosition();
 				
 				// put values in array 
