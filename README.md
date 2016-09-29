@@ -1,5 +1,5 @@
 - COINS Plugin
-- Version: 1.1
+- Version: 1.2
 - Author: Svantje Lilienthal
 
 About
@@ -15,7 +15,7 @@ This plugin is licensed under the GNU General Public License v2.
 System Requirements
 -------------------
 This plugin is compatible with:
- - OMP 1.1.1
+ - OMP 1.2
 
 Installation
 ------------

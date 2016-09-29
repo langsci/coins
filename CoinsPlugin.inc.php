@@ -66,10 +66,11 @@ class CoinsPlugin extends GenericPlugin {
 		$smarty =& $args[1];
 		if (!isset($smarty['smarty_include_tpl_file'])) return false;
 		switch ($smarty['smarty_include_tpl_file']) {
-			case 'catalog/book/googlescholar.tpl':
+			case 'frontend/objects/monograph_dublinCore.tpl':
 				
 				// get variables
 				$request = $this->getRequest();
+
 				$publishedMonograph = $templateMgr->get_template_vars('publishedMonograph');
 				$authors = $publishedMonograph->getAuthors();
 				$firstAuthor = $authors[0];
@@ -142,7 +143,7 @@ class CoinsPlugin extends GenericPlugin {
 		$templateMgr =& $args[0];
 		$template =& $args[1];
 		switch ($template) {
-			case 'catalog/book/book.tpl':
+			case 'frontend/pages/book.tpl':
 				HookRegistry::register ('TemplateManager::include', array($this, 'handleTemplateInclude'));
 				break;
 		}
