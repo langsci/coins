@@ -40,7 +40,7 @@ class CoinsPlugin extends GenericPlugin {
 	}
 
 	/**
-	 * @see Plugin::getDescirption
+	 * @see Plugin::getDescription
 	 * @return string
 	 */
 	function getDescription() {
@@ -68,22 +68,9 @@ class CoinsPlugin extends GenericPlugin {
 		switch ($smarty['smarty_include_tpl_file']) {
 			case 'catalog/book/googlescholar.tpl':
 				
-		/*		$publishedMonographDAO = new PublishedMonographDAO;
-				$publishedMonographs = $publishedMonographDAO -> getByPressId(1);
-				$publishedMonographsArray = $publishedMonographs ->toArray();
-			
-				$pubformats = $publishedMonographsArray[$i] ->getPublicationFormats();
-				$test = $pubformats[0]->getName();
-
-				echo "<br>name of publication format:" . implode($test);
-				*/
-
-				$request = $this->getRequest();
-				//$templateMgr = TemplateManager::getManager($request);
-
-				$publishedMonograph = $templateMgr->get_template_vars('publishedMonograph');
-
 				// get variables
+				$request = $this->getRequest();
+				$publishedMonograph = $templateMgr->get_template_vars('publishedMonograph');
 				$authors = $publishedMonograph->getAuthors();
 				$firstAuthor = $authors[0];
 				$datePublished = $publishedMonograph->getDatePublished();
@@ -112,21 +99,14 @@ class CoinsPlugin extends GenericPlugin {
 					// booktitle
 					array('rft.btitle', $publishedMonograph->getLocalizedFullTitle()),
 					
-					// author
-				//	foreach ($authors as $author) {
-				//		$vars[] = array('rft.au', $author->getFullName());
-				//	}
-					
 					array('rft.aulast', $firstAuthor->getLastName()),
 					array('rft.aufirst', $firstAuthor->getFirstName()),
 					array('rft.auinit', $firstAuthor->getMiddleName()),
-				//	array('rft.au', $publishedMonograph->getAuthorString()),
 				
 					// series
 					array('rft.series', $seriesTitle),
 					
 					// publisher
-				//	array('rft.pub', $currentPress->getSetting('publisher')), 
 					array('rft.publisher', $publisher), 
 					array('rft.place', $place), 
 					
@@ -136,29 +116,7 @@ class CoinsPlugin extends GenericPlugin {
 					// language
 					array('rft.language', substr($language, 0, 3)),
 					
-					
-					//array('rft.title', $journal->getLocalizedName()),
-					//array('rft.jtitle', $journal->getLocalizedName()),
-					//array('rft.atitle', $article->getLocalizedTitle()),
-					//array('rft.artnum', $article->getBestArticleId()),
-					//array('rft.stitle', $journal->getLocalizedSetting('abbreviation')),
-					//array('rft.volume', $issue->getVolume()),
-					//array('rft.issue', $issue->getNumber()),
-					
 				);
-
-			/*	$datePublished = $publishedMonograph->getDatePublished();
-				if (!$datePublished) $datePublished = $issue->getDatePublished();
-				if ($datePublished) {
-					$vars[] = array('rft.date', date('Y-m-d', strtotime($datePublished)));
-				} */
-
-				
-
-			//	if ($doi = $publishedMonograph->getPubId('doi')) $vars[] = array('rft_id', 'info:doi/' . $doi);
-			//	if ($publishedMonograph->getPages()) $vars[] = array('rft.pages', $publishedMonograph->getPages());
-				//if ($journal->getSetting('printIssn')) $vars[] = array('rft.issn', $journal->getSetting('printIssn'));
-				//if ($journal->getSetting('onlineIssn')) $vars[] = array('rft.eissn', $journal->getSetting('onlineIssn'));
 
 				$title = '';
 				foreach ($vars as $entries) {
