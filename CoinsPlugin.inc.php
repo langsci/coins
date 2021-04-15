@@ -1,38 +1,36 @@
 <?php
 
 /**
- * @file plugins/generic/coins/CoinsPlugin.inc.php
+ * @file CoinsPlugin.inc.php
  *
- * Copyright (c) 2015 Simon Fraser University Library
- * Copyright (c) 2003-2015 John Willinsky
- * Distributed under the GNU GPL v2. For full terms see the file docs/COPYING.
+ * Copyright (c) 2013-2020 Simon Fraser University
+ * Copyright (c) 2003-2020 John Willinsky
+ * Distributed under the GNU GPL v3. For full terms see the file LICENSE.
  *
  * @class CoinsPlugin
- * @ingroup plugins_generic_coins
- *
  * @brief COinS plugin class
  */
 
 import('lib.pkp.classes.plugins.GenericPlugin');
-import('classes.monograph.PublishedMonographDAO');
 
 class CoinsPlugin extends GenericPlugin {
 	/**
-	 * @see Plugin::register
+	 * Called as a plugin is registered to the registry
+	 * @param $category String Name of category plugin was registered to
 	 * @return boolean True iff plugin initialized successfully; if false,
 	 * 	the plugin will not be registered.
 	 */
-	function register($category, $path) {
-		$success = parent::register($category, $path);
+	function register($category, $path, $mainContextId = null) {
+		$success = parent::register($category, $path, $mainContextId);
 		if (!Config::getVar('general', 'installed') || defined('RUNNING_UPGRADE')) return true;
 		if ($success && $this->getEnabled()) {
-			HookRegistry::register ('TemplateManager::display', array($this, 'handleTemplateDisplay'));
+			HookRegistry::register('Templates::Common::Footer::PageFooter', array($this, 'insertFooter'));
 		}
 		return $success;
 	}
 
 	/**
-	 * @see Plugin::getDisplayName
+	 * Get the display name of this plugin
 	 * @return string
 	 */
 	function getDisplayName() {
@@ -40,7 +38,7 @@ class CoinsPlugin extends GenericPlugin {
 	}
 
 	/**
-	 * @see Plugin::getDescription
+	 * Get the description of this plugin
 	 * @return string
 	 */
 	function getDescription() {
@@ -48,108 +46,72 @@ class CoinsPlugin extends GenericPlugin {
 	}
 
 	/**
-	 * @see Plugin::getInstallSitePluginSettingsFile
-	 * @return string
+	 * Insert COinS tag.
+	 * @param $hookName string
+	 * @param $params array
+	 * @return boolean
 	 */
-	function getInstallSitePluginSettingsFile() {
-		return $this->getPluginPath() . '/settings.xml';
-	}
+	function insertFooter($hookName, $params) {
+		if ($this->getEnabled()) {
+			$request = Application::get()->getRequest();
 
-	/**
-	 * Intercept the googlescholar template to add the COinS tag
-	 * @param $hookName string Hook name
-	 * @param $args array Array of hook parameters
-	 * @return boolean false to continue processing subsequent hooks
-	 */
-	function handleTemplateInclude($hookName, $args) {
-		$templateMgr =& $args[0];
-		$smarty =& $args[1];
-		if (!isset($smarty['smarty_include_tpl_file'])) return false;
-		switch ($smarty['smarty_include_tpl_file']) {
-			case 'frontend/objects/monograph_dublinCore.tpl':
-				
-				// get variables
-				$request = $this->getRequest();
+			// Ensure that the callback is being called from a page COinS should be embedded in.
+			if (!in_array($request->getRequestedPage() . '/' . $request->getRequestedOp(), array(
+				'catalog/book',
+			))) return false;
 
-				// monograph metadata
-				$publishedMonograph = $templateMgr->get_template_vars('publishedMonograph');
-				$authors = $publishedMonograph->getAuthors();
-				$firstAuthor = $authors[0];
-				$datePublished = $publishedMonograph->getDatePublished();
-				$language = $publishedMonograph->getLocale();
-				
-				// press metadata
-				$currentPress = $templateMgr->get_template_vars('currentPress');
-				$publisher = $currentPress->getLocalizedName();
-				$place = $currentPress->getSetting('location');
-				
-				// series metadata
-				$seriesId = $publishedMonograph ->getSeriesId();
-				$seriesDAO = new SeriesDAO;
-				$series = $seriesDAO -> getById($seriesId,1);
-				$seriesTitle = $series->getLocalizedFullTitle();
-				$seriesPosition = $publishedMonograph ->getSeriesPosition();
-				
-				// put values in array 
-				$vars = array(
-					array('ctx_ver', 'Z39.88-2004'),
-					array('rft_id', $request->url(null, 'catalog', 'book', $publishedMonograph->getId())),
-					// coins id for book
-					array('rft_val_fmt', 'info:ofi/fmt:kev:mtx:book'),
-					// genre: book
-					array('rft.genre', 'book'),
-					// booktitle
-					array('rft.btitle', $publishedMonograph->getLocalizedFullTitle()),
-					
-					array('rft.aulast', $firstAuthor->getLastName()),
-					array('rft.aufirst', $firstAuthor->getFirstName()),
-					array('rft.auinit', $firstAuthor->getMiddleName()),
-				
-					// series
-					array('rft.series', $seriesTitle),
-					
-					// publisher
-					array('rft.publisher', $publisher), 
-					array('rft.place', $place), 
-					
-					// published date
-					array('rft.date', date('Y-m-d', strtotime($datePublished))),
-					
-					// language
-					array('rft.language', substr($language, 0, 3)),
-					
-				);
+			$smarty =& $params[1];
+			$output =& $params[2];
+			$templateMgr =& TemplateManager::getManager($request);
 
-				$title = '';
-				foreach ($vars as $entries) {
-					list($name, $value) = $entries;
-					$title .= $name . '=' . urlencode($value) . '&';
-				}
-				$title = htmlentities(substr($title, 0, -1));
+			// monograph metadata
+			$publication = $templateMgr->getTemplateVars('publication');
+			$locale = $publication->getData('locale');
+			$authors = $publication->getData('authors');
+			$firstAuthor = $authors[0];
+			$datePublished = $publication->getData('datePublished');
+			$publicationTitle = $publication->getData('title');
 
-				$templateMgr->assign('title', $title);
-				$templateMgr->display($this->getTemplatePath() . 'coinsTag.tpl', 'text/html', 'CoinsPlugin::addCoinsTag');
-				break;
+			// press metadata
+			$press = $templateMgr->getTemplateVars('currentPress');
+			$publisher = $press->getLocalizedName();
+			$place = $press->getSetting('location');
+
+			// series metadata
+			$series = $templateMgr->getTemplateVars('series');
+			$seriesTitle = $series->getLocalizedFullTitle();
+			//$publication ->getSeriesPosition();
+
+			// put values in array
+			$vars = array(
+				array('ctx_ver', 'Z39.88-2004'),
+				array('rft_id', $request->url(null, 'catalog', 'book', $publication->getData('submissionId'))),
+				// coins id for book
+				array('rft_val_fmt', 'info:ofi/fmt:kev:mtx:book'),
+				// genre: book
+				array('rft.genre', 'book'),
+				// booktitle
+				array('rft.btitle', $publicationTitle[$locale]),
+				array('rft.aulast', $firstAuthor->getFamilyName($locale)),
+				array('rft.aufirst', $firstAuthor->getGivenName($locale)),
+				// series
+				array('rft.series', $seriesTitle),
+				// publisher
+				array('rft.publisher', $publisher),
+				array('rft.place', $place),
+				// published date
+				array('rft.date', date('Y-m-d', strtotime($datePublished))),
+				// language
+				array('rft.language', $locale),
+			);
+			$title = '';
+			foreach ($vars as $entries) {
+				list($name, $value) = $entries;
+				$title .= $name . '=' . urlencode($value) . '&';
+			}
+			$title = htmlentities(substr($title, 0, -1));
+			$output .= "<span class=\"Z3988\" title=\"$title\"></span>\n";
 		}
 		return false;
 	}
-
-	/**
-	 * Hook callback: Handle requests.
-	 * @param $hookName string Hook name
-	 * @param $args array Array of hook parameters
-	 * @return boolean false to continue processing subsequent hooks
-	 */
-	function handleTemplateDisplay($hookName, $args) {
-		$templateMgr =& $args[0];
-		$template =& $args[1];
-		switch ($template) {
-			case 'frontend/pages/book.tpl':
-				HookRegistry::register ('TemplateManager::include', array($this, 'handleTemplateInclude'));
-				break;
-		}
-		return false;
-	}
-
 }
-?>

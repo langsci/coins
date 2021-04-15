@@ -1,24 +1,18 @@
-- COINS Plugin
-- Version: 1.2
-- Author: Svantje Lilienthal
+# COinS Plugin
+
+- OJS COinS Plugin
+- Version: 1.0.3
 
 About
 -----
-The COinS plugin adds an OpenURL descriptor to book pages  that can be used e.g. for extraction to citation tools.
+This plugin embeds OpenURL COinS (http://ocoins.info/) in OJS articles,
+permitting tools like Zotero (http://www.zotero.org) to grab citations.
 
 License
 -------
-Copyright (c) 2016 Language Science Press
-
-This plugin is licensed under the GNU General Public License v2. 
+This plugin is licensed under the GNU General Public License v2. See the
+accompanying OJS file docs/COPYING for the complete terms of this license.
 
 System Requirements
 -------------------
-This plugin is compatible with:
- - OMP 1.2
-
-Installation
-------------
-To install the plugin:
- - Upload the tar.gz file in OMP (Management > Website Settings > Plugins > Generic Plugins)
- - Clone the code from Github in the plugin/generic folder.
+OJS 3.2 or greater.
